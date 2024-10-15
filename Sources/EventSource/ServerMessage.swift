@@ -53,7 +53,7 @@ public struct ServerMessage {
         return true
     }
     
-    public static func parse(from data: Data) -> ServerMessage? {
+ public static func parse(from data: Data) -> ServerMessage? {
     let rows = data.split(separator: MessageParser.lf) // Separate message fields
     
     var message = ServerMessage()
@@ -65,14 +65,14 @@ public struct ServerMessage {
         }
         
         let keyValue = row.split(separator: MessageParser.colon, maxSplits: 1)
-        let key = keyValue[0].utf8String // No trimming of spaces here
-        let value = keyValue[safe: 1]?.utf8String // No trimming of spaces here
+        let key = keyValue[0].utf8String.trimmingCharacters(in: .whitespaces) // Key still trims spaces
+        let value = keyValue[safe: 1]?.utf8String // Value does NOT trim spaces
         
         switch key {
         case "id":
-            message.id = value // No trimming of spaces here
+            message.id = value // No trimming of spaces for value
         case "event":
-            message.event = value // No trimming of spaces here
+            message.event = value // No trimming of spaces for value
         case "data":
             if let existingData = message.data {
                 message.data = existingData + "\n" + (value ?? "")
@@ -80,7 +80,7 @@ public struct ServerMessage {
                 message.data = value
             }
         case "time":
-            message.time = value // No trimming of spaces here
+            message.time = value // No trimming of spaces for value
         default:
             // If the line is not empty but does not contain a colon character
             // add it to the other fields using the whole line as the field name,
@@ -103,6 +103,7 @@ public struct ServerMessage {
     
     return message
 }
+
 
 }
 
