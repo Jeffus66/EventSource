@@ -74,11 +74,7 @@ public struct ServerMessage {
         case "event":
             message.event = value // No trimming of spaces for value
         case "data":
-            if let existingData = message.data {
-                message.data = existingData + "\n" + (value ?? "")
-            } else {
                 message.data = value
-            }
         case "time":
             message.time = value // No trimming of spaces for value
         default:
