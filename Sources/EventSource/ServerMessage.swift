@@ -54,56 +54,55 @@ public struct ServerMessage {
     }
     
  public static func parse(from data: Data) -> ServerMessage? {
-        let rows = data.split(separator: MessageParser.lf) // Separate message fields
+    let rows = data.split(separator: MessageParser.lf) // Separate message fields
+    
+    var message = ServerMessage()
+    
+    for row in rows {
+        // Skip the line if it is empty or it starts with a colon character
+        if row.isEmpty, row.first == MessageParser.colon {
+            continue
+        }
         
-        var message = ServerMessage()
+        let keyValue = row.split(separator: MessageParser.colon, maxSplits: 1)
+        let key = keyValue[0].utf8String.trimmingCharacters(in: .whitespaces) // Key still trims spaces
+        let value = keyValue[safe: 1]?.utf8String // Value does NOT trim spaces
         
-        for row in rows {
-            // Skip the line if it is empty or it starts with a colon character
-            if row.isEmpty, row.first == MessageParser.colon {
-                continue
+        switch key {
+        case "id":
+            message.id = value // No trimming of spaces for value
+        case "event":
+            message.event = value // No trimming of spaces for value
+        case "data":
+            if let existingData = message.data {
+                message.data = existingData + "\n" + (value ?? "")
+            } else {
+                message.data = value
             }
-            
-            let keyValue = row.split(separator: MessageParser.colon, maxSplits: 1)
-            let key = keyValue[0].utf8String.trimmingCharacters(in: .whitespaces)
-            let value = keyValue[safe: 1]?.utf8String.trimmingCharacters(in: .whitespaces)
-            
-            switch key {
-            case "id":
-                message.id = value?.trimmingCharacters(in: .whitespaces)
-            case "event":
-                message.event = value?.trimmingCharacters(in: .whitespaces)
-            case "data":
-                if let existingData = message.data {
-                    message.data = existingData + "\n" + (value?.trimmingCharacters(in: .whitespaces) ?? "")
+        case "time":
+            message.time = value // No trimming of spaces for value
+        default:
+            // If the line is not empty but does not contain a colon character
+            // add it to the other fields using the whole line as the field name,
+            // and the empty string as the field value.
+            if row.contains(MessageParser.colon) == false {
+                let string = row.utf8String
+                if var other = message.other {
+                    other[string] = ""
+                    message.other = other
                 } else {
-                    message.data = value?.trimmingCharacters(in: .whitespaces)
-                }
-            case "time":
-                message.time = value?.trimmingCharacters(in: .whitespaces)
-            default:
-                // If the line is not empty but does not contain a color character
-                // add it to the other fields using the whole line as the field name,
-                // and the empty string as the field value.
-                if row.contains(MessageParser.colon) == false {
-                    let string = row.utf8String
-                    if var other = message.other {
-                        other[string] = ""
-                        message.other = other
-                    } else {
-                        message.other = [string: ""]
-                    }
+                    message.other = [string: ""]
                 }
             }
         }
-        
-        if message.isEmpty() {
-            return nil
-        }
-        
-        return message
     }
-
+    
+    if message.isEmpty() {
+        return nil
+    }
+    
+    return message
+}
 
 }
 
