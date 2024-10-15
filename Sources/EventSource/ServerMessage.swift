@@ -94,7 +94,8 @@ public struct ServerMessage {
     }
     
     if message.isEmpty() {
-        return nil
+        message.data = "\n"
+        return message
     }
     
     return message
